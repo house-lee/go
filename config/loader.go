@@ -11,7 +11,7 @@ import (
     "io"
 )
 
-func loadConfFile(confFile string) (map[string]string,error) {
+func loadConfDictFromFile(confFile string) (map[string]string,error) {
     fp, err := os.Open(confFile)
     if err != nil {
         return nil, err
