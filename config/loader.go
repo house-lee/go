@@ -1,51 +1,90 @@
 package config
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"io"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
-    "os"
-    "bufio"
-    "io"
 )
 
-func loadConfDictFromFile(confFile string) (map[string]string,error) {
-    fp, err := os.Open(confFile)
+
+func LoadEnvs(envObj interface{}) error {
+    envs, err := loadConfDictFromEnv()
     if err != nil {
-        return nil, err
+        return err
     }
-    defer fp.Close()
-    fileBuf := bufio.NewReader(fp)
+    return loadObjFromDict(envObj, envs)
+}
+
+func LoadConf(confObj interface{}, confFile string) error {
+    confDict, err := loadConfDictFromFile(confFile)
+    if err != nil {
+        return err
+    }
+    return loadObjFromDict(confObj, confDict)
+}
+
+func loadConfDictFromEnv() (map[string]string, error) {
+    osEnvs := os.Environ()
     confs := make(map[string]string)
-    for lineNum := 0;; {
-        lineNum++
-        line, err := fileBuf.ReadString('\n')
-        if err != nil {
-            if err == io.EOF {
-                break
-            } else if err == bufio.ErrBufferFull {
-                return confs,fmt.Errorf("Line [%d] is too long", lineNum)
-            } else {
-                return confs, err
-            }
+    for _,env := range osEnvs {
+        if key,val, err := parseLine(env); err != nil {
+            return confs, err
+        } else {
+            confs[key] = val
         }
-
-        line = strings.TrimSpace(line)
-        if line[0] == '#' {
-            continue
-        }
-        delimPos := strings.Index(line, "=")
-        if delimPos == -1 {
-            return confs, fmt.Errorf("Line [%d] is invalid", lineNum)
-        }
-        key := strings.TrimSpace(line[:delimPos])
-        val := strings.TrimSpace(line[delimPos+1:])
-        confs[key] = val
-
     }
     return confs, nil
+}
+
+func loadConfDictFromFile(confFile string) (map[string]string, error) {
+	fp, err := os.Open(confFile)
+	if err != nil {
+		return nil, err
+	}
+	defer fp.Close()
+	fileBuf := bufio.NewReader(fp)
+	confs := make(map[string]string)
+	for lineNum := 0; ; {
+		lineNum++
+		line, err := fileBuf.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else if err == bufio.ErrBufferFull {
+				return confs, fmt.Errorf("Line [%d] is too long", lineNum)
+			} else {
+				return confs, err
+			}
+		}
+
+		line = strings.TrimSpace(line)
+		if line[0] == '#' {
+			continue
+		}
+
+        if key,val,err := parseLine(line); err != nil {
+            return confs, fmt.Errorf("Line [%d]:%s", lineNum, err.Error())
+        } else {
+            confs[key] = val
+        }
+	}
+	return confs, nil
+}
+
+func parseLine(line string) (key,value string, err error) {
+    delimPos := strings.Index(line, "=")
+    if delimPos == -1 {
+        return "","", fmt.Errorf("Invalid line:[%s]", line)
+    }
+    key = strings.TrimSpace(line[:delimPos])
+    value = strings.Trim(line[delimPos+1:], " \r\n\t")
+    err = nil
+    return
 }
 
 func loadObjFromDict(confObj interface{}, source map[string]string) error {
@@ -123,12 +162,12 @@ func loadObjFromDict(confObj interface{}, source map[string]string) error {
 			if k == reflect.Uint64 {
 				bitSize = 64
 			}
-            base := 10
-            if strings.HasPrefix(confVal, "0x") {
-                base = 16
-            } else if confVal[0] == '0' {
-                base = 8
-            }
+			base := 10
+			if strings.HasPrefix(confVal, "0x") {
+				base = 16
+			} else if confVal[0] == '0' {
+				base = 8
+			}
 			tmpUint, err := strconv.ParseUint(confVal, base, bitSize)
 			if err != nil {
 				return err
