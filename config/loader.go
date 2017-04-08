@@ -12,7 +12,7 @@ import (
 )
 
 
-func LoadEnvs(envObj interface{}) error {
+func LoadEnv(envObj interface{}) error {
     envs, err := loadConfDictFromEnv()
     if err != nil {
         return err
