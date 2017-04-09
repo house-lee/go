@@ -3,8 +3,8 @@ package config
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
-    "strings"
 )
 
 type confStruct struct {
@@ -58,10 +58,10 @@ func TestLoadObjFromDictLoadsExpectedConf(t *testing.T) {
 			confVal = fmt.Sprintf("0x%x", valField.Uint())
 		case "OCT_UINT_CONF":
 			confVal = fmt.Sprintf("0%o", valField.Uint())
-        case "HEX_INT_CONF":
-            confVal = fmt.Sprintf("0x%x", valField.Int())
-        case "OCT_INT_CONF":
-            confVal = fmt.Sprintf("0%o", valField.Int())
+		case "HEX_INT_CONF":
+			confVal = fmt.Sprintf("0x%x", valField.Int())
+		case "OCT_INT_CONF":
+			confVal = fmt.Sprintf("0%o", valField.Int())
 		default:
 			confVal = fmt.Sprintf("%v", valField.Interface())
 		}
@@ -75,137 +75,143 @@ func TestLoadObjFromDictLoadsExpectedConf(t *testing.T) {
 	}
 }
 
-func TestLoadObjFromDictReturnsErrIfRequiredConfNotSet(t *testing.T)  {
-    testConfs := map[string]string {
-        "INT32_CONF": "255",
-        "STR_CONF":  "StringConfgiration",
-    }
+func TestLoadObjFromDictReturnsErrIfRequiredConfNotSet(t *testing.T) {
+	testConfs := map[string]string{
+		"INT32_CONF": "255",
+		"STR_CONF":   "StringConfgiration",
+	}
 
-    confObj := confStruct{}
-    err := loadObjFromDict(&confObj, testConfs)
-    if err == nil || !strings.Contains(err.Error(), "is required but not set") {
-        t.Error("loadObjFromDict should return expected error if required conf")
-    }
+	confObj := confStruct{}
+	err := loadObjFromDict(&confObj, testConfs)
+	if err == nil || !strings.Contains(err.Error(), "is required but not set") {
+		t.Error("loadObjFromDict should return expected error if required conf")
+	}
 }
 
 func TestLoadObjFromDictShouldRecognizeBothYesAndTrue(t *testing.T) {
-    testConfs := map[string]string {
-        "INT_CONF" : "123",
-        "BOOL_CONF" : "Yes",
-        "OPT_BOOL_CONF" : "YES",
-    }
+	testConfs := map[string]string{
+		"INT_CONF":      "123",
+		"BOOL_CONF":     "Yes",
+		"OPT_BOOL_CONF": "YES",
+	}
 
-    confObj := confStruct{}
-    err := loadObjFromDict(&confObj, testConfs)
-    if err != nil || confObj.BoolConf != true || confObj.OptBoolConf != true {
-        t.Error("loadObjFromDict should recognize \"Yes\" as boolean true")
-    }
+	confObj := confStruct{}
+	err := loadObjFromDict(&confObj, testConfs)
+	if err != nil || confObj.BoolConf != true || confObj.OptBoolConf != true {
+		t.Error("loadObjFromDict should recognize \"Yes\" as boolean true")
+	}
 
-    testConfs = map[string]string {
-        "INT_CONF" : "123",
-        "BOOL_CONF" : "True",
-        "OPT_BOOL_CONF" : "TRuE",
-    }
+	testConfs = map[string]string{
+		"INT_CONF":      "123",
+		"BOOL_CONF":     "True",
+		"OPT_BOOL_CONF": "TRuE",
+	}
 
-    confObj = confStruct{}
-    err = loadObjFromDict(&confObj, testConfs)
-    if err != nil || confObj.BoolConf != true || confObj.OptBoolConf != true {
-        t.Error("loadObjFromDict should recognize \"True\" as boolean true")
-    }
+	confObj = confStruct{}
+	err = loadObjFromDict(&confObj, testConfs)
+	if err != nil || confObj.BoolConf != true || confObj.OptBoolConf != true {
+		t.Error("loadObjFromDict should recognize \"True\" as boolean true")
+	}
 }
 
 func TestLoadObjFromDictShouldRecognizeBothNoAndFalse(t *testing.T) {
-    testConfs := map[string]string {
-        "INT_CONF" : "123",
-        "BOOL_CONF" : "No",
-        "OPT_BOOL_CONF" : "NO",
-    }
+	testConfs := map[string]string{
+		"INT_CONF":      "123",
+		"BOOL_CONF":     "No",
+		"OPT_BOOL_CONF": "NO",
+	}
 
-    confObj := confStruct{}
-    err := loadObjFromDict(&confObj, testConfs)
-    if err != nil || confObj.BoolConf != false || confObj.OptBoolConf != false {
-        t.Error("loadObjFromDict should recognize \"No\" as boolean false")
-    }
+	confObj := confStruct{}
+	err := loadObjFromDict(&confObj, testConfs)
+	if err != nil || confObj.BoolConf != false || confObj.OptBoolConf != false {
+		t.Error("loadObjFromDict should recognize \"No\" as boolean false")
+	}
 
-    testConfs = map[string]string {
-        "INT_CONF" : "123",
-        "BOOL_CONF" : "False",
-        "OPT_BOOL_CONF" : "False",
-    }
+	testConfs = map[string]string{
+		"INT_CONF":      "123",
+		"BOOL_CONF":     "False",
+		"OPT_BOOL_CONF": "False",
+	}
 
-    confObj = confStruct{}
-    err = loadObjFromDict(&confObj, testConfs)
-    if err != nil || confObj.BoolConf != false || confObj.OptBoolConf != false {
-        t.Error("loadObjFromDict should recognize \"False\" as boolean true")
-    }
+	confObj = confStruct{}
+	err = loadObjFromDict(&confObj, testConfs)
+	if err != nil || confObj.BoolConf != false || confObj.OptBoolConf != false {
+		t.Error("loadObjFromDict should recognize \"False\" as boolean true")
+	}
 }
-
 
 func TestLoadObjFromDictShouldReturnErrIfTypeNotMatch(t *testing.T) {
-    testConfs := map[string]string {
-        "INT_CONF" : "NOT_AN_INT",
-        "BOOL_CONF" : "Yes",
-    }
+	testConfs := map[string]string{
+		"INT_CONF":  "NOT_AN_INT",
+		"BOOL_CONF": "Yes",
+	}
 
-    confObj := confStruct{}
-    err := loadObjFromDict(&confObj, testConfs)
-    if err == nil {
-        t.Error("loadObjFromDict should return error if int type not match")
-    }
+	confObj := confStruct{}
+	err := loadObjFromDict(&confObj, testConfs)
+	if err == nil {
+		t.Error("loadObjFromDict should return error if int type not match")
+	}
 
-    testConfs = map[string]string {
-        "INT_CONF" : "123",
-        "BOOL_CONF" : "NOT_A_BOOL",
-    }
+	testConfs = map[string]string{
+		"INT_CONF":  "123",
+		"BOOL_CONF": "NOT_A_BOOL",
+	}
 
-    confObj = confStruct{}
-    err = loadObjFromDict(&confObj, testConfs)
-    if err == nil {
-        t.Error("loadObjFromDict should return error if bool type not match")
-    }
+	confObj = confStruct{}
+	err = loadObjFromDict(&confObj, testConfs)
+	if err == nil {
+		t.Error("loadObjFromDict should return error if bool type not match")
+	}
 
-    testConfs = map[string]string {
-        "INT_CONF" : "123",
-        "BOOL_CONF" : "Yes",
-        "FLOAT32_CONF": "NOT_A_FLOAT",
-    }
+	testConfs = map[string]string{
+		"INT_CONF":     "123",
+		"BOOL_CONF":    "Yes",
+		"FLOAT32_CONF": "NOT_A_FLOAT",
+	}
 
-    confObj = confStruct{}
-    err = loadObjFromDict(&confObj, testConfs)
-    if err == nil {
-        t.Error("loadObjFromDict should return error if float type not match")
-    }
+	confObj = confStruct{}
+	err = loadObjFromDict(&confObj, testConfs)
+	if err == nil {
+		t.Error("loadObjFromDict should return error if float type not match")
+	}
 
-    testConfs = map[string]string {
-        "INT_CONF" : "123",
-        "BOOL_CONF" : "Yes",
-        "UINT_CONF" : "-256",
-    }
+	testConfs = map[string]string{
+		"INT_CONF":  "123",
+		"BOOL_CONF": "Yes",
+		"UINT_CONF": "-256",
+	}
 
-    confObj = confStruct{}
-    err = loadObjFromDict(&confObj, testConfs)
-    if err == nil {
-        t.Error("loadObjFromDict should return error if uint type not match")
-    }
+	confObj = confStruct{}
+	err = loadObjFromDict(&confObj, testConfs)
+	if err == nil {
+		t.Error("loadObjFromDict should return error if uint type not match")
+	}
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+func TestParseLineReturnsExpectedKeyValuePair(t *testing.T) {
+	testData := [][]string{
+		{"k1=v1", "k1", "v1"},
+		{"   k2  = v2 ", "k2", "v2"},
+		{"k3 = v3 \r", "k3", "v3"},
+		{"k4 = v4 \n", "k4", "v4"},
+		{"k5 = v5 \t", "k5", "v5"},
+		{"k6 = v6 \t\r\n", "k6", "v6"},
+	}
+	for _, testCase := range testData {
+		k, v, e := parseLine(testCase[0])
+        if e != nil {
+            t.Errorf("parseLine failed. [%s]", e.Error())
+        }
+		if k != testCase[1] || v != testCase[2] {
+			t.Errorf(
+				"parseLine failed. src: [%s],expected [%s]=[%s],got [%s]=[%s]",
+                testCase[0],
+                testCase[1],
+                testCase[2],
+                k,
+                v,
+			)
+		}
+	}
+}
 
