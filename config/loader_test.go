@@ -214,3 +214,6 @@ func TestParseLineReturnsExpectedKeyValuePair(t *testing.T) {
 		}
 	}
 }
+
+//TODO: mock os.Open and bufio.NewReader and add test cases for loadConfDictFromFile
+//TODO: test cases for loadConfDictFromEnv & LoadEnv & LoadConf
