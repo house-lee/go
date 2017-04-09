@@ -41,6 +41,7 @@ func loadConfDictFromEnv() (map[string]string, error) {
     return confs, nil
 }
 
+
 func loadConfDictFromFile(confFile string) (map[string]string, error) {
 	fp, err := os.Open(confFile)
 	if err != nil {
