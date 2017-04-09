@@ -50,12 +50,12 @@ func loadConfDictFromFile(confFile string) (map[string]string, error) {
 	defer fp.Close()
 	fileBuf := bufio.NewReader(fp)
 	confs := make(map[string]string)
-	for lineNum := 0; ; {
-		lineNum++
+    lastLine := false
+	for lineNum := 0; !lastLine; lineNum++ {
 		line, err := fileBuf.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				break
+				lastLine = true
 			} else if err == bufio.ErrBufferFull {
 				return confs, fmt.Errorf("Line [%d] is too long", lineNum)
 			} else {
@@ -64,7 +64,7 @@ func loadConfDictFromFile(confFile string) (map[string]string, error) {
 		}
 
 		line = strings.TrimSpace(line)
-		if line[0] == '#' {
+		if line == "" || line[0] == '#' {
 			continue
 		}
 
@@ -82,7 +82,7 @@ func parseLine(line string) (key,value string, err error) {
     if delimPos == -1 {
         return "","", fmt.Errorf("Invalid line:[%s]", line)
     }
-    key = strings.TrimSpace(line[:delimPos])
+    key = strings.Trim(line[:delimPos], "\t ")
     value = strings.Trim(line[delimPos+1:], " \r\n\t")
     err = nil
     return
