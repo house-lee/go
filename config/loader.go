@@ -128,6 +128,7 @@ func loadObjFromDict(confObj interface{}, source map[string]string) error {
 			base := 10
 			if strings.HasPrefix(confVal, "0x") {
 				base = 16
+                confVal = confVal[2:]
 			} else if confVal[0] == '0' {
 				base = 8
 			}
@@ -165,6 +166,7 @@ func loadObjFromDict(confObj interface{}, source map[string]string) error {
 			base := 10
 			if strings.HasPrefix(confVal, "0x") {
 				base = 16
+                confVal = confVal[2:]
 			} else if confVal[0] == '0' {
 				base = 8
 			}
