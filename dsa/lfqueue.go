@@ -11,25 +11,25 @@ import (
  * Package DSA (Data Structures and Algorithms)
  */
 
-type node struct {
+type lfNode struct {
 	value interface{}
-	next  *node
+	next  *lfNode
 }
 
-type queue struct {
-	root         *node
-	tail         *node
+type lfQueue struct {
+	root         *lfNode
+	tail         *lfNode
 	maxItems     uint32
 	length       uint32
 	maxConsumers uint32
-	notEmpty		 chan bool
+	notEmpty     chan bool
 }
 
 const uint32subOne = ^uint32(0)
 
 func NewQueue(maxConsumers uint32, maxItems uint32) IQueue {
-	q := queue{
-		root:         &node{nil, nil},
+	q := lfQueue{
+		root:         &lfNode{nil, nil},
 		maxItems:     maxItems,
 		length:       0,
 		maxConsumers: maxConsumers,
@@ -39,18 +39,20 @@ func NewQueue(maxConsumers uint32, maxItems uint32) IQueue {
 	return &q
 }
 
-func (q *queue) Enqueue(v interface{}) error {
+func (q *lfQueue) Enqueue(v interface{}) error {
 	if q.maxItems != 0 {
 		if atomic.AddUint32(&q.length, 1) > q.maxItems {
 			atomic.AddUint32(&q.length, uint32subOne)
 			return errors.New("ERR_QUEUE_FULL")
 		}
+	} else {
+		atomic.AddUint32(&q.length, 1)
 	}
-	newNode := &node{
+	newNode := &lfNode{
 		value: v,
 		next:  nil,
 	}
-	var t *node
+	var t *lfNode
 	for {
 		t = q.tail
 		if atomic.CompareAndSwapPointer((*unsafe.Pointer)(unsafe.Pointer(&t.next)), nil, unsafe.Pointer(newNode)) {
@@ -66,19 +68,27 @@ func (q *queue) Enqueue(v interface{}) error {
 	return nil
 }
 
-func (q *queue) Dequeue() interface{} {
-	var head *node
+func (q *lfQueue) Dequeue() interface{} {
+	var head *lfNode
 	for {
-		head = q.root.next
-		if head == nil {
+		head = q.root
+		if head.next == nil {
 			<- q.notEmpty
 			continue
 		}
-		if atomic.CompareAndSwapPointer((*unsafe.Pointer)(unsafe.Pointer(&q.root.next)), unsafe.Pointer(head), unsafe.Pointer(head.next)) {
+		if atomic.CompareAndSwapPointer((*unsafe.Pointer)(unsafe.Pointer(&q.root)), unsafe.Pointer(head), unsafe.Pointer(head.next)) {
 			break
 		}
 	}
-	atomic.CompareAndSwapPointer((*unsafe.Pointer)(unsafe.Pointer(&q.tail)), unsafe.Pointer(head), unsafe.Pointer(q.root))
 	atomic.AddUint32(&q.length, uint32subOne)
-	return head.value
+	return head.next.value
+
+}
+
+func (q *lfQueue) Length() uint32 {
+	length := atomic.LoadUint32(&q.length)
+	if length > q.maxItems {
+		length = q.maxItems
+	}
+	return length
 }

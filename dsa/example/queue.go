@@ -4,38 +4,63 @@ import (
 	"fmt"
 	"github.com/house-lee/SoarGO/dsa"
 	"sync"
-    "math/rand"
-    "time"
+	"time"
 )
 
 var gq dsa.IQueue
+var testArr []bool
+
+const (
+	maxTests  = 20000
+	writerCnt = 10
+	readerCnt = 10
+)
 
 func main() {
+	testArr = make([]bool, maxTests)
+	for i := 0; i != maxTests; i++ {
+		testArr[i] = false
+	}
+	gq = dsa.NewQueue(readerCnt, 0)
 
-    rand.Seed(time.Now().Unix())
-	gq = dsa.NewQueue(10, 1024)
 	var wg sync.WaitGroup
-	for i := 0; i != 100; i++ {
+	for i := 0; i != writerCnt; i++ {
 		wg.Add(1)
-		go func() {
-            for j := 0; j != 10; j++ {
-                randint := rand.Intn(100000)
-                fmt.Println(randint)
-                gq.Enqueue(randint)
-            }
-            wg.Done()
-		}()
+		go func(idx int) {
+			numPerThread := maxTests / writerCnt
+			start := idx * numPerThread
+			time.Sleep(2 * time.Second)
+			fmt.Println(start, numPerThread)
+			for j := 0; j != numPerThread; j++ {
+				if err := gq.Enqueue(start + j); err != nil {
+					fmt.Println(err.Error())
+				}
+			}
+			wg.Done()
+		}(i)
 	}
 
-	for i := 0; i != 10; i++ {
+	for i := 0; i != readerCnt; i++ {
 		wg.Add(1)
 		go func() {
-			for j := 0; j != 100; j++ {
-				item := gq.Dequeue().(int)
-				fmt.Println(item)
+			var idx int
+			numPerThread := maxTests / readerCnt
+			for j := 0; j != numPerThread; j++ {
+				idx = gq.Dequeue().(int)
+				testArr[idx] = true
 			}
-            wg.Done()
+			wg.Done()
 		}()
 	}
 	wg.Wait()
+	//for i := 0;i != maxTests ;i++  {
+	//	idx := gq.Dequeue().(int)
+	//	testArr[idx] = true
+	//}
+	for i := 0; i != maxTests; i++ {
+		if !testArr[i] {
+			fmt.Printf("%d not set\n", i)
+		}
+	}
+	fmt.Println("Done")
 }
