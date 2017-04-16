@@ -1,6 +1,6 @@
 package dsa
 
-type Queue interface {
+type IQueue interface {
     Enqueue(v interface{}) error
-    Dequeue() (interface{}, error)
+    Dequeue() interface{}
 }
