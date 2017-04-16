@@ -11,9 +11,9 @@ var gq dsa.IQueue
 var testArr []bool
 
 const (
-	maxTests  = 20000
-	writerCnt = 10
-	readerCnt = 10
+	maxTests  = 1000000
+	writerCnt = 1
+	readerCnt = 1
 )
 
 func main() {
@@ -21,7 +21,8 @@ func main() {
 	for i := 0; i != maxTests; i++ {
 		testArr[i] = false
 	}
-	gq = dsa.NewQueue(readerCnt, 0)
+	//gq = dsa.NewLockFreeQueue(readerCnt, 0)
+	gq = dsa.NewQueueWithLock(readerCnt, 0)
 
 	var wg sync.WaitGroup
 	for i := 0; i != writerCnt; i++ {
@@ -45,7 +46,7 @@ func main() {
 		go func() {
 			var idx int
 			numPerThread := maxTests / readerCnt
-			for j := 0; j != numPerThread; j++ {
+			for j := 0; j != numPerThread ; j++ {
 				idx = gq.Dequeue().(int)
 				testArr[idx] = true
 			}
@@ -53,10 +54,6 @@ func main() {
 		}()
 	}
 	wg.Wait()
-	//for i := 0;i != maxTests ;i++  {
-	//	idx := gq.Dequeue().(int)
-	//	testArr[idx] = true
-	//}
 	for i := 0; i != maxTests; i++ {
 		if !testArr[i] {
 			fmt.Printf("%d not set\n", i)

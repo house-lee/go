@@ -27,7 +27,7 @@ type lfQueue struct {
 
 const uint32subOne = ^uint32(0)
 
-func NewQueue(maxConsumers uint32, maxItems uint32) IQueue {
+func NewLockFreeQueue(maxConsumers uint32, maxItems uint32) IQueue {
 	q := lfQueue{
 		root:         &lfNode{nil, nil},
 		maxItems:     maxItems,
@@ -63,7 +63,6 @@ func (q *lfQueue) Enqueue(v interface{}) error {
 	select {
 	case q.notEmpty <- true:
 	default:
-
 	}
 	return nil
 }
