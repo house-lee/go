@@ -6,13 +6,17 @@ type inheritFds struct {
 }
 
 const (
-    ListenerFd = iota
+    TCPListenerFd = iota
+    UDPListenerFd
+    UnixListenerFd
     FileFd
 )
 func RegisterInheritFd(fdType, fd int) {
     //TODO
     switch fdType {
-    case ListenerFd:
+    case TCPListenerFd:
+    case UDPListenerFd:
+    case UnixListenerFd:
     case FileFd:
     default:
 
