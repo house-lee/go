@@ -84,7 +84,7 @@ func (iFds *inheritFds)RegisterInheritFd(v interface{}) error {
 	return nil
 }
 
-func (iFds *inheritFds)GetInheritFds() map[string]int {
+func (iFds *inheritFds)GetInheritFds() map[string][]int {
 	return nil
 }
 
