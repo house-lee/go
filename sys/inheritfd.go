@@ -85,6 +85,25 @@ func (iFds *inheritFds)RegisterInheritFd(v interface{}) error {
 }
 
 func (iFds *inheritFds)GetInheritFds() map[string][]int {
+	fds := map[string][]int{}
+	defer func(){
+		iFds.tcpLock.RUnlock()
+		iFds.udpLock.RUnlock()
+		iFds.unixLock.RUnlock()
+		iFds.fileLock.RUnlock()
+	}()
+
+	iFds.tcpLock.RLock()
+	l := len(iFds.tcpListeners)
+	if l != 0 {
+		fds["tcp"] = make([]int, l)
+		for i := 0; i != l; i++ {
+			fds["tcp"][i] = iFds.tcpListeners[i]
+		}
+	}
+
+	//TODO...
+	
 	return nil
 }
 
