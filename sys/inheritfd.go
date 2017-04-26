@@ -1,14 +1,14 @@
 package sys
 
 import (
+	"errors"
 	"net"
 	"os"
 	"sync"
-	"errors"
 )
 
 type inheritFds struct {
-	fdAttr        iFdAttr
+	fdAttr        IFdAttr
 	tcpListeners  []int
 	tcpLock       sync.RWMutex
 	udpConns      []int
@@ -19,10 +19,10 @@ type inheritFds struct {
 	fileLock      sync.RWMutex
 }
 
-var fds *inheritFds
+var fds IInherit
 var initInheritFd sync.Once
 
-func InheritFd() *inheritFds {
+func InheritFd() IInherit {
 	initInheritFd.Do(func() {
 		fds = &inheritFds{
 			fdAttr:        FdAttr(),
@@ -35,7 +35,7 @@ func InheritFd() *inheritFds {
 	return fds
 }
 
-func (iFds *inheritFds)RegisterInheritFd(v interface{}) error {
+func (iFds *inheritFds) RegisterInheritFd(v interface{}) error {
 	switch v := v.(type) {
 	case *net.TCPListener:
 		fd, e := getFd(v)
@@ -84,9 +84,9 @@ func (iFds *inheritFds)RegisterInheritFd(v interface{}) error {
 	return nil
 }
 
-func (iFds *inheritFds)GetInheritFds() map[string][]int {
+func (iFds *inheritFds) GetInheritFds() map[string][]int {
 	fds := map[string][]int{}
-	defer func(){
+	defer func() {
 		iFds.tcpLock.RUnlock()
 		iFds.udpLock.RUnlock()
 		iFds.unixLock.RUnlock()
@@ -102,10 +102,45 @@ func (iFds *inheritFds)GetInheritFds() map[string][]int {
 		}
 	}
 
-	//TODO...
-	
-	return nil
+	iFds.udpLock.RLock()
+	l = len(iFds.udpConns)
+	if l != 0 {
+		fds["udp"] = make([]int, l)
+		for i := 0; i != l; i++ {
+			fds["udp"][i] = iFds.udpConns[i]
+		}
+	}
+
+	iFds.unixLock.RLock()
+	l = len(iFds.unixListeners)
+	if l != 0 {
+		fds["unix"] = make([]int, l)
+		for i := 0; i != l; i++ {
+			fds["unix"][i] = iFds.unixListeners[i]
+		}
+	}
+
+	iFds.fileLock.RLock()
+	l = len(iFds.fileFds)
+	if l != 0 {
+		fds["file"] = make([]int, l)
+		for i := 0; i != l; i++ {
+			fds["file"][i] = iFds.fileFds[i]
+		}
+	}
+
+	return fds
 }
+
+func RegisterInheritFd(v interface{}) error {
+	return InheritFd().RegisterInheritFd(v)
+}
+
+func GetInheritFds() map[string][]int {
+	return InheritFd().GetInheritFds()
+}
+
+
 
 type iFile interface {
 	File() (f *os.File, err error)

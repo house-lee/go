@@ -5,15 +5,13 @@ import (
     "sync"
 )
 
-type fdAttr struct {
-    iFdAttr
-}
+type fdAttr struct {}
 
 
 var initFdAttr sync.Once
-var fdAttrObj *fdAttr
+var fdAttrObj IFdAttr
 
-func FdAttr() *fdAttr{
+func FdAttr() IFdAttr {
     initFdAttr.Do(func() {
         fdAttrObj = &fdAttr{}
     })
