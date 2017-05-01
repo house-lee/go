@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	. "github.com/house-lee/SoarGO/goinc"
 )
 
 
@@ -43,7 +44,7 @@ func loadConfDictFromEnv() (map[string]string, error) {
 
 
 func loadConfDictFromFile(confFile string) (map[string]string, error) {
-	fp, err := os.Open(confFile)
+	fp, err := FS.Open(confFile)
 	if err != nil {
 		return nil, err
 	}
