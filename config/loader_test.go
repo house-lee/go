@@ -1,10 +1,15 @@
 package config
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
+	"github.com/house-lee/SoarGO/goinc"
+	"io"
 	"reflect"
 	"strings"
 	"testing"
+	"os"
 )
 
 type confStruct struct {
@@ -199,21 +204,222 @@ func TestParseLineReturnsExpectedKeyValuePair(t *testing.T) {
 	}
 	for _, testCase := range testData {
 		k, v, e := parseLine(testCase[0])
-        if e != nil {
-            t.Errorf("parseLine failed. [%s]", e.Error())
-        }
+		if e != nil {
+			t.Errorf("parseLine failed. [%s]", e.Error())
+		}
 		if k != testCase[1] || v != testCase[2] {
 			t.Errorf(
 				"parseLine failed. src: [%s],expected [%s]=[%s],got [%s]=[%s]",
-                testCase[0],
-                testCase[1],
-                testCase[2],
-                k,
-                v,
+				testCase[0],
+				testCase[1],
+				testCase[2],
+				k,
+				v,
 			)
 		}
 	}
 }
 
-//TODO: mock os.Open and bufio.NewReader and add test cases for loadConfDictFromFile
-//TODO: test cases for loadConfDictFromEnv & LoadEnv & LoadConf
+type mockFS struct{}
+type mockFile struct {
+	goinc.StubFile
+}
+
+var fileOpenErr error
+
+func (mockFS) Open(name string) (goinc.File, error) {
+	return &mockFile{}, fileOpenErr
+}
+
+type mockBufIO struct{}
+
+var configStr string
+var mockBufIOReaderObj goinc.BufIOReader
+func (mockBufIO) NewReader(rd io.Reader) goinc.BufIOReader {
+	return mockBufIOReaderObj
+}
+
+type mockBufIOReader struct {
+	goinc.StubBufIO
+}
+var bufioReadStringError error
+func (*mockBufIOReader) ReadString(delim byte) (string, error) {
+	return "", bufioReadStringError
+}
+
+func TestLoadConfDictFromFileReturnsExpectedMap(t *testing.T) {
+	configStr = `#This is an example conf file
+
+PORT = 6379
+    MYSQL_HOST = localhost
+    MYSQL_PORT = 3306
+  RUN_IN_BACKGROUND = true
+PI = 3.1415926`
+	mockBufIOReaderObj = bufio.NewReader(strings.NewReader(configStr))
+	goinc.FS = mockFS{}
+	goinc.BufIO = mockBufIO{}
+	defer func() {
+		goinc.FS = goinc.DefaultFS{}
+		goinc.BufIO = goinc.DefaultBufIO{}
+		configStr = ""
+		mockBufIOReaderObj = nil
+	}()
+
+
+	expectedMap := map[string]string{
+		"PORT":              "6379",
+		"MYSQL_HOST":        "localhost",
+		"MYSQL_PORT":        "3306",
+		"RUN_IN_BACKGROUND": "true",
+		"PI":                "3.1415926",
+	}
+	res, err := loadConfDictFromFile("whatever")
+	if err != nil {
+		t.Errorf("Encountered unexpected error: [%s]", err.Error())
+	}
+	if !reflect.DeepEqual(res, expectedMap) {
+		t.Error("loadConfDictFromFile didn't load expected map")
+	}
+}
+
+func TestLoadConfDictFromFileReturnsErrorWithParsedMapIfConfigFileIsInvalid(t *testing.T) {
+	configStr = `#This is an example conf file
+
+PORT = 6379
+    MYSQL_HOST = localhost
+    MYSQL_PORT = 3306
+  RUN_IN_BACKGROUND = true
+PI = 3.1415926
+
+This is NOT a valid line
+`
+	mockBufIOReaderObj = bufio.NewReader(strings.NewReader(configStr))
+	goinc.FS = mockFS{}
+	goinc.BufIO = mockBufIO{}
+	defer func() {
+		goinc.FS = goinc.DefaultFS{}
+		goinc.BufIO = goinc.DefaultBufIO{}
+		configStr = ""
+		mockBufIOReaderObj = nil
+	}()
+	expectedMap := map[string]string{
+		"PORT":              "6379",
+		"MYSQL_HOST":        "localhost",
+		"MYSQL_PORT":        "3306",
+		"RUN_IN_BACKGROUND": "true",
+		"PI":                "3.1415926",
+	}
+	res, err := loadConfDictFromFile("whatever")
+	if err == nil || !strings.Contains(err.Error(), "This is NOT a valid line") {
+		t.Errorf("Encountered unexpected error: [%s]", err.Error())
+	}
+	if !reflect.DeepEqual(res, expectedMap) {
+		t.Error("loadConfDictFromFile didn't load expected map")
+	}
+}
+
+func TestLoadConfDictFromFileReturnsErrIfFailedToOpenFile(t *testing.T) {
+	goinc.FS = mockFS{}
+	fileOpenErr = errors.New("OPEN_FILE_FAILED")
+	defer func() {
+		goinc.FS = goinc.DefaultFS{}
+		fileOpenErr = nil
+	}()
+	_, err := loadConfDictFromFile("whatever")
+	if err == nil || err.Error() != "OPEN_FILE_FAILED" {
+		t.Error("loadConfDictFromFile should return error if failed to open the config file")
+	}
+
+}
+func TestLoadConfDictFromFileReturnsErrIfLineTooLong(t *testing.T) {
+	bufioReadStringError = bufio.ErrBufferFull
+	mockBufIOReaderObj = &mockBufIOReader{}
+	goinc.FS = mockFS{}
+	goinc.BufIO = mockBufIO{}
+	defer func() {
+		goinc.FS = goinc.DefaultFS{}
+		goinc.BufIO = goinc.DefaultBufIO{}
+		mockBufIOReaderObj = nil
+	}()
+	_, err :=  loadConfDictFromFile("whatever")
+	if !strings.Contains(err.Error(), "is too long") {
+		t.Error("loadConfDictFromFile should return error if a line in the config file is too long")
+	}
+}
+
+func TestLoadConfDictFromEnvReturnsExpectedMap(t *testing.T) {
+	backupEnv()
+	defer restoreEnv()
+	os.Clearenv()
+	expectedMap := map[string]string{
+		"PORT":              "6379",
+		"MYSQL_HOST":        "localhost",
+		"MYSQL_PORT":        "3306",
+		"RUN_IN_BACKGROUND": "true",
+		"PI":                "3.1415926",
+	}
+	for k,v := range expectedMap {
+		os.Setenv(k,v)
+	}
+	m,err := loadConfDictFromEnv()
+	if err != nil {
+		t.Errorf("Encountered unexpected error: [%s]", err.Error())
+	}
+	if !reflect.DeepEqual(m, expectedMap) {
+		t.Error("loadConfDictFromEnv didn't load expected map")
+	}
+}
+
+func TestLoadConfCallLoadDictFromFileAndLoadObjFromDict(t *testing.T) {
+	callSequence = ""
+	loadConfDictFromFile = mockLoadConfDictFromFile
+	loadObjFromDict = mockLoadObjFromDict
+	defer func() {
+		loadConfDictFromFile = loadConfDictFromFileFunc
+		loadObjFromDict = loadObjFromDictFunc
+	}()
+	LoadConf(nil, "whatever")
+	if callSequence != "loadConfDictFromFile,loadObjFromDict" {
+		t.Error("LoadConf should call loadConfDictFromFile and loadObjFromDict respectively")
+	}
+}
+
+func TestLoadEnvCallLoadDictFromFileAndLoadObjFromDict(t *testing.T) {
+	callSequence = ""
+	loadConfDictFromEnv = mockLoadConfDictFromEnv
+	loadObjFromDict = mockLoadObjFromDict
+	defer func() {
+		loadConfDictFromEnv = loadConfDictFromEnvFunc
+		loadObjFromDict = loadObjFromDictFunc
+	}()
+	LoadEnv(nil)
+	if callSequence != "loadConfDictFromEnv,loadObjFromDict" {
+		t.Error("LoadConf should call loadConfDictFromEnv and loadObjFromDict respectively")
+	}
+}
+
+var callSequence string = ""
+func mockLoadConfDictFromFile(confFile string) (map[string]string, error) {
+	callSequence += "loadConfDictFromFile,"
+	return nil,nil
+}
+func mockLoadConfDictFromEnv () (map[string]string, error) {
+	callSequence += "loadConfDictFromEnv,"
+	return nil, nil
+}
+func mockLoadObjFromDict(confObj interface{}, source map[string]string) error {
+	callSequence += "loadObjFromDict"
+	return nil
+}
+
+var envBuffer []string
+func backupEnv() {
+	envBuffer = os.Environ()
+}
+func restoreEnv() {
+	os.Clearenv()
+	for _,env := range envBuffer {
+		item := strings.Split(env, "=")
+		os.Setenv(item[0], item[1])
+	}
+}

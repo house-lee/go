@@ -29,7 +29,8 @@ func LoadConf(confObj interface{}, confFile string) error {
     return loadObjFromDict(confObj, confDict)
 }
 
-func loadConfDictFromEnv() (map[string]string, error) {
+var loadConfDictFromEnv = loadConfDictFromEnvFunc
+func loadConfDictFromEnvFunc() (map[string]string, error) {
     osEnvs := os.Environ()
     confs := make(map[string]string)
     for _,env := range osEnvs {
@@ -42,14 +43,14 @@ func loadConfDictFromEnv() (map[string]string, error) {
     return confs, nil
 }
 
-
-func loadConfDictFromFile(confFile string) (map[string]string, error) {
+var loadConfDictFromFile = loadConfDictFromFileFunc
+func loadConfDictFromFileFunc(confFile string) (map[string]string, error) {
 	fp, err := FS.Open(confFile)
 	if err != nil {
 		return nil, err
 	}
 	defer fp.Close()
-	fileBuf := bufio.NewReader(fp)
+	fileBuf := BufIO.NewReader(fp)
 	confs := make(map[string]string)
     lastLine := false
 	for lineNum := 0; !lastLine; lineNum++ {
@@ -89,7 +90,8 @@ func parseLine(line string) (key,value string, err error) {
     return
 }
 
-func loadObjFromDict(confObj interface{}, source map[string]string) error {
+var loadObjFromDict = loadObjFromDictFunc
+func loadObjFromDictFunc(confObj interface{}, source map[string]string) error {
 	if confObj == nil || source == nil || len(source) == 0 {
 		return errors.New("Invalid Arguments")
 	}
