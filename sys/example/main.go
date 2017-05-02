@@ -8,6 +8,7 @@ import (
 )
 
 func main()  {
+    inheritObj := sys.InheritFd()
     var tcplistener_1, tcplistener_2 net.Listener
     var err error
     tcplistener_1, err = net.Listen("tcp", "127.0.0.1:6379")
@@ -18,11 +19,11 @@ func main()  {
     if err != nil {
         fmt.Println(err.Error())
     }
-    err = sys.RegisterInheritFd(tcplistener_1)
+    err = inheritObj.RegisterInheritFd(tcplistener_1)
     if err != nil {
         fmt.Println(err.Error())
     }
-    err = sys.RegisterInheritFd(tcplistener_2)
+    err = inheritObj.RegisterInheritFd(tcplistener_2)
     if err != nil {
         fmt.Println(err.Error())
     }
@@ -38,11 +39,11 @@ func main()  {
     if err != nil {
         fmt.Println(err.Error())
     }
-    err = sys.RegisterInheritFd(udpConn_1)
+    err = inheritObj.RegisterInheritFd(udpConn_1)
     if err != nil {
         fmt.Println(err.Error())
     }
-    err = sys.RegisterInheritFd(udpConn_2)
+    err = inheritObj.RegisterInheritFd(udpConn_2)
     if err != nil {
         fmt.Println(err.Error())
     }
@@ -56,11 +57,11 @@ func main()  {
     if err != nil {
         fmt.Println(err.Error())
     }
-    err = sys.RegisterInheritFd(unixListener_1)
+    err = inheritObj.RegisterInheritFd(unixListener_1)
     if err != nil {
         fmt.Println(err.Error())
     }
-    err = sys.RegisterInheritFd(unixListener_2)
+    err = inheritObj.RegisterInheritFd(unixListener_2)
     if err != nil {
         fmt.Println(err.Error())
     }
@@ -75,15 +76,15 @@ func main()  {
         fmt.Println(err.Error())
     }
 
-    err = sys.RegisterInheritFd(file1)
+    err = inheritObj.RegisterInheritFd(file1)
     if err != nil {
         fmt.Println(err.Error())
     }
-    err = sys.RegisterInheritFd(file2)
+    err = inheritObj.RegisterInheritFd(file2)
     if err != nil {
         fmt.Println(err.Error())
     }
 
-    m := sys.GetInheritFds()
+    m := inheritObj.GetInheritFds()
     fmt.Printf("%+v\n", m)
 }

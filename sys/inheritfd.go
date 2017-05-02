@@ -19,21 +19,6 @@ type inheritFds struct {
 	fileLock      sync.RWMutex
 }
 
-var fds IInherit
-var initInheritFd sync.Once
-
-func InheritFd() IInherit {
-	initInheritFd.Do(func() {
-		fds = &inheritFds{
-			fdAttr:        FdAttr(),
-			tcpListeners:  make([]int, 0, 10),
-			udpConns:      make([]int, 0, 10),
-			unixListeners: make([]int, 0, 10),
-			fileFds:       make([]int, 0, 10),
-		}
-	})
-	return fds
-}
 
 func (iFds *inheritFds) RegisterInheritFd(v interface{}) error {
 	switch v := v.(type) {
@@ -85,7 +70,7 @@ func (iFds *inheritFds) RegisterInheritFd(v interface{}) error {
 }
 
 func (iFds *inheritFds) GetInheritFds() map[string][]int {
-	fds := map[string][]int{}
+	storedFds := map[string][]int{}
 	defer func() {
 		iFds.tcpLock.RUnlock()
 		iFds.udpLock.RUnlock()
@@ -96,49 +81,42 @@ func (iFds *inheritFds) GetInheritFds() map[string][]int {
 	iFds.tcpLock.RLock()
 	l := len(iFds.tcpListeners)
 	if l != 0 {
-		fds["tcp"] = make([]int, l)
+		storedFds["tcp"] = make([]int, l)
 		for i := 0; i != l; i++ {
-			fds["tcp"][i] = iFds.tcpListeners[i]
+			storedFds["tcp"][i] = iFds.tcpListeners[i]
 		}
 	}
 
 	iFds.udpLock.RLock()
 	l = len(iFds.udpConns)
 	if l != 0 {
-		fds["udp"] = make([]int, l)
+		storedFds["udp"] = make([]int, l)
 		for i := 0; i != l; i++ {
-			fds["udp"][i] = iFds.udpConns[i]
+			storedFds["udp"][i] = iFds.udpConns[i]
 		}
 	}
 
 	iFds.unixLock.RLock()
 	l = len(iFds.unixListeners)
 	if l != 0 {
-		fds["unix"] = make([]int, l)
+		storedFds["unix"] = make([]int, l)
 		for i := 0; i != l; i++ {
-			fds["unix"][i] = iFds.unixListeners[i]
+			storedFds["unix"][i] = iFds.unixListeners[i]
 		}
 	}
 
 	iFds.fileLock.RLock()
 	l = len(iFds.fileFds)
 	if l != 0 {
-		fds["file"] = make([]int, l)
+		storedFds["file"] = make([]int, l)
 		for i := 0; i != l; i++ {
-			fds["file"][i] = iFds.fileFds[i]
+			storedFds["file"][i] = iFds.fileFds[i]
 		}
 	}
 
-	return fds
+	return storedFds
 }
 
-func RegisterInheritFd(v interface{}) error {
-	return InheritFd().RegisterInheritFd(v)
-}
-
-func GetInheritFds() map[string][]int {
-	return InheritFd().GetInheritFds()
-}
 
 
 
