@@ -11,7 +11,7 @@ type IWorkflow interface {
 }
 
 type ITaskMonitor interface {
-    LaunchTaskMonitor(workflowID string, workStationID string, interval uint32) error
+    LaunchTaskMonitor(serverID string, workflowID string, workStationID string, interval uint32) error
 }
 
 type IWorkStation interface {
@@ -28,3 +28,5 @@ type IJob interface {
 type IWorker interface {
     Do(job IJob) (result IJob, err error)
 }
+
+//TODO: Consider a better way to require for "server identification"
