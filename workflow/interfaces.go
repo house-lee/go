@@ -20,6 +20,7 @@ type IWorkStation interface {
     SetWorker(worker IWorker, num uint32) error
     GetStationID() string
     LaunchWorkStation(workStationID string) error
+    SetServerIdentification(serverID string)
 }
 
 type IJob interface {
@@ -28,5 +29,3 @@ type IJob interface {
 type IWorker interface {
     Do(job IJob) (result IJob, err error)
 }
-
-//TODO: Consider a better way to require for "server identification"
