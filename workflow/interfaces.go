@@ -24,7 +24,6 @@ type IWorkStation interface {
 }
 
 type IJob interface {
-    ToString() string
 }
 type IWorker interface {
     Do(job IJob) (result IJob, err error)
