@@ -3,6 +3,7 @@ package server
 import (
 	wkf "github.com/house-lee/SoarGO/workflow"
 	"net"
+    "github.com/house-lee/SoarGO/coordination"
 )
 
 type IServer interface {
@@ -10,6 +11,8 @@ type IServer interface {
 	GracefulStop(maxTimeout int) error
     Stop() error
 	RegisterWorkflow(routes []interface{}, workflow wkf.IWorkflow) error
+    ID() string
+    SetCoordinator(coordinator coordination.ICoordinator)
 }
 
 type IUDPServer interface {
