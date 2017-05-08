@@ -1,4 +1,4 @@
-package server
+package svr
 
 import (
 	"github.com/house-lee/SoarGO/sys"

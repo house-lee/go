@@ -2,19 +2,19 @@ package main
 
 import (
     "fmt"
-    "github.com/house-lee/SoarGO/config"
-    "github.com/house-lee/SoarGO/config/example/conf"
+    "github.com/house-lee/SoarGO/cfg"
+    "github.com/house-lee/SoarGO/cfg/example/conf"
     "os"
 )
 
 func main()  {
-    if err := config.LoadConf(&conf.ServerFromFile, "./runtime.conf"); err != nil {
+    if err := cfg.LoadConf(&conf.ServerFromFile, "./runtime.conf"); err != nil {
         fmt.Println(err.Error())
     }
     fmt.Printf("%+v\n", conf.ServerFromFile)
 
     prepareEnv()
-    if err := config.LoadEnv(&conf.ServerFromEnv); err != nil {
+    if err := cfg.LoadEnv(&conf.ServerFromEnv); err != nil {
         fmt.Println(err.Error())
     }
     fmt.Printf("%+v\n", conf.ServerFromEnv)
