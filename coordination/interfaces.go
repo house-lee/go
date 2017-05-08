@@ -1,7 +1,7 @@
 package coordination
 
 import (
-    wkf "github.com/house-lee/SoarGO/workflow"
+    "github.com/house-lee/SoarGO/wkf"
 )
 
 type ICoordinator interface {

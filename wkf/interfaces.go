@@ -1,12 +1,15 @@
-package workflow
+package wkf
 
-import "github.com/house-lee/SoarGO/dsa"
+import (
+    "github.com/house-lee/SoarGO/dsa"
+    "github.com/house-lee/SoarGO/req"
+)
 
 
 type IWorkflow interface {
     GetWorkflowID() string
     RegisterWorkStation(station IWorkStation)
-    HandleRequest(reqID string, reqBody interface{}, isAsync bool) error
+    HandleRequest(request req.IRequest) error
     LaunchWorkFlow(workflowID string) error
 }
 

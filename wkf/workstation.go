@@ -1,4 +1,4 @@
-package workflow
+package wkf
 
 type WorkStation struct {
 	ID         string
