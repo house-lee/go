@@ -19,15 +19,16 @@ type ITaskMonitor interface {
 
 type IWorkStation interface {
     ITaskMonitor
-    GetInputQueue() dsa.IQueue
-    SetWorker(worker IWorker, num uint32) error
+    //GetInputQueue() dsa.IQueue //replace with NewTask maybe?
+    //SetWorker(worker IWorker, num uint32) error
     GetStationID() string
     LaunchWorkStation(workStationID string) error
     SetServerIdentification(serverID string)
 }
 
 type IJob interface {
+    Serialize() ([]byte, error)
+    Unserialize(obj interface{}) error
 }
-type IWorker interface {
-    Do(job IJob) (result IJob, err error)
-}
+
+type TaskHandler func(job IJob)(result IJob, err error)
