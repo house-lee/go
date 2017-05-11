@@ -1,7 +1,7 @@
 package svr
 
 import (
-	"github.com/house-lee/SoarGO/wkf"
+	"github.com/house-lee/SoarGO/v1/wkf"
 	"net"
     "github.com/house-lee/SoarGO/coordination"
 )

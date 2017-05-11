@@ -2,7 +2,7 @@ package wkf
 
 import (
     "github.com/house-lee/SoarGO/dsa"
-    "github.com/house-lee/SoarGO/req"
+    "github.com/house-lee/SoarGO/v1/req"
 )
 
 

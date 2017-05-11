@@ -1,7 +1,7 @@
 package main
 
 import (
-    "github.com/house-lee/SoarGO/sys"
+    "github.com/house-lee/SoarGO/v1/sys"
     "net"
     "fmt"
     "os"
