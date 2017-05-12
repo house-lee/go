@@ -16,6 +16,7 @@ type workStation struct {
 
 func (ws *workStation) mainLoop() {
     for ; ;  {
+        //Coordinator update request progress
         request := ws.InputQueue.Dequeue().(req.IRequest)
         result, err := ws.HandleTask(request.CurrentJob())
         if err != nil {
@@ -25,3 +26,4 @@ func (ws *workStation) mainLoop() {
         ws.OutputQueue.Enqueue(result)
     }
 }
+//TODO: Workflow add result handler

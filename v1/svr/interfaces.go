@@ -3,7 +3,7 @@ package svr
 import (
 	"github.com/house-lee/SoarGO/v1/wkf"
 	"net"
-    "github.com/house-lee/SoarGO/coordination"
+    "github.com/house-lee/SoarGO/v1/coordination"
 )
 
 type IServer interface {
