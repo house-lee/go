@@ -7,17 +7,17 @@ import (
 
 type workStation struct {
 	id        string
-	WorkerNum int
+	workerNum int
 
-	HandleTask TaskHandler
-	Stop       chan bool
+	handleTask TaskHandler
+    stop chan bool
 
-	InputQueue  dsa.IQueue
-	OutputQueue dsa.IQueue
+	inputQueue  dsa.IQueue
+	outputQueue dsa.IQueue
 
 	coordinator coordinator.ICoordinator
 
-	private iWorkStationPrivate
+	iWorkStationPrivate
 }
 
 func (ws *workStation) ID() string {
@@ -25,55 +25,64 @@ func (ws *workStation) ID() string {
 }
 
 func (ws *workStation) TaskQueue() dsa.IQueue {
-	return ws.InputQueue
+	return ws.inputQueue
 }
 
 func (ws *workStation) SetCoordinator(c coordinator.ICoordinator) {
 	ws.coordinator = c
 }
 func (ws *workStation) SetTaskHandler(handler TaskHandler) {
-	ws.HandleTask = handler
+	ws.handleTask = handler
 }
 
 func (ws *workStation) SetWorkerNum(num int) {
-	ws.WorkerNum = num
+	ws.workerNum = num
 }
 
 func (ws *workStation) Start() {
-	for i := 0; i != ws.WorkerNum; i++ {
-		go ws.workerLoop()
-	}
+	ws.start(ws)
 }
 
 func (ws *workStation) Restart() {
-	close(ws.Stop)
-	ws.Start()
+    ws.restart(ws)
 }
 
 type iWorkStationPrivate interface {
-	workerLoop()
-    stop()
-    start()
+	mainLoop(caller *workStation)
+    restart(caller *workStation)
+    start(caller *workStation)
 }
 
 type wsPrivate struct {
-    //TODO
 }
 
-func (ws *workStation) workerLoop() {
+func (*wsPrivate) mainLoop(caller *workStation) {
 	for {
 		select {
-		case <-ws.Stop:
+		case <-caller.stop:
 			return
 		default:
-			request := ws.InputQueue.Dequeue().(IRequest)
-			ws.coordinator.UpdateRequestProgress(request.ID(), ws.id, request.Job())
-			res, err := ws.HandleTask(request.Job())
+			request := caller.inputQueue.Dequeue().(IRequest)
+			caller.coordinator.UpdateRequestProgress(request.ID(), caller.id, request.Job())
+			res, err := caller.handleTask(request.Job())
 			if err != nil {
-				ws.coordinator.SaveFailedRequest(request.ID(), err.Code(), err.Message())
+				caller.coordinator.SaveFailedRequest(request.ID(), err.Code(), err.Message())
+                request.R
 				continue
 			}
-			ws.OutputQueue.Enqueue(res)
+            request.UpdateJob(res)
+			caller.outputQueue.Enqueue(request)
 		}
 	}
+}
+
+func (ws *wsPrivate) start(caller *workStation)  {
+    for i:= 0; i != caller.workerNum; i++ {
+        ws.mainLoop(caller)
+    }
+}
+
+func (ws *wsPrivate) restart(caller *workStation)  {
+    close(caller.stop)
+    ws.start(caller)
 }

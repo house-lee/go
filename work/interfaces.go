@@ -3,14 +3,13 @@ package work
 import (
 	"github.com/house-lee/SoarGO/coordinator"
 	"github.com/house-lee/SoarGO/dsa"
-	"io"
 )
 
 type IRequest interface {
 	ID() string
-	ResponseWriter() io.Writer
+	SendResponse()
 	Job() []byte
-	UpdateJob(interface{})
+	UpdateJob(job []byte)
 }
 
 type IError interface {
@@ -18,7 +17,7 @@ type IError interface {
 	Message() string
 }
 
-type TaskHandler func(input interface{}) (output interface{}, err IError)
+type TaskHandler func(input []byte) (output []byte, err IError)
 
 type IWorkStation interface {
 	ID() string
