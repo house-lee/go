@@ -67,7 +67,7 @@ func (*wsPrivate) mainLoop(caller *workStation) {
 			res, err := caller.handleTask(request.Job())
 			if err != nil {
 				caller.coordinator.SaveFailedRequest(request.ID(), err.Code(), err.Message())
-                request.R
+                //request.RespondFailure()?
 				continue
 			}
             request.UpdateJob(res)
