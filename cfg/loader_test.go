@@ -256,11 +256,11 @@ PORT = 6379
   RUN_IN_BACKGROUND = true
 PI = 3.1415926`
 	mockBufIOReaderObj = bufio.NewReader(strings.NewReader(configStr))
-	goinc.FS = mockFS{}
-	goinc.BufIO = mockBufIO{}
+	fs = mockFS{}
+	bufferIO = mockBufIO{}
 	defer func() {
-		goinc.FS = goinc.DefaultFS{}
-		goinc.BufIO = goinc.DefaultBufIO{}
+		fs = goinc.DefaultFS{}
+		bufferIO = goinc.DefaultBufIO{}
 		configStr = ""
 		mockBufIOReaderObj = nil
 	}()
@@ -294,11 +294,11 @@ PI = 3.1415926
 This is NOT a valid line
 `
 	mockBufIOReaderObj = bufio.NewReader(strings.NewReader(configStr))
-	goinc.FS = mockFS{}
-	goinc.BufIO = mockBufIO{}
+	fs = mockFS{}
+	bufferIO = mockBufIO{}
 	defer func() {
-		goinc.FS = goinc.DefaultFS{}
-		goinc.BufIO = goinc.DefaultBufIO{}
+		fs = goinc.DefaultFS{}
+		bufferIO = goinc.DefaultBufIO{}
 		configStr = ""
 		mockBufIOReaderObj = nil
 	}()
@@ -319,10 +319,10 @@ This is NOT a valid line
 }
 
 func TestLoadConfDictFromFileReturnsErrIfFailedToOpenFile(t *testing.T) {
-	goinc.FS = mockFS{}
+	fs = mockFS{}
 	fileOpenErr = errors.New("OPEN_FILE_FAILED")
 	defer func() {
-		goinc.FS = goinc.DefaultFS{}
+		fs = goinc.DefaultFS{}
 		fileOpenErr = nil
 	}()
 	_, err := loadConfDictFromFile("whatever")
@@ -334,11 +334,11 @@ func TestLoadConfDictFromFileReturnsErrIfFailedToOpenFile(t *testing.T) {
 func TestLoadConfDictFromFileReturnsErrIfLineTooLong(t *testing.T) {
 	bufioReadStringError = bufio.ErrBufferFull
 	mockBufIOReaderObj = &mockBufIOReader{}
-	goinc.FS = mockFS{}
-	goinc.BufIO = mockBufIO{}
+	fs = mockFS{}
+	bufferIO = mockBufIO{}
 	defer func() {
-		goinc.FS = goinc.DefaultFS{}
-		goinc.BufIO = goinc.DefaultBufIO{}
+		fs = goinc.DefaultFS{}
+		bufferIO = goinc.DefaultBufIO{}
 		mockBufIOReaderObj = nil
 	}()
 	_, err :=  loadConfDictFromFile("whatever")

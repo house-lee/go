@@ -12,6 +12,8 @@ import (
 	. "github.com/house-lee/SoarGO/goinc"
 )
 
+var fs FileSystem = DefaultFS{}
+var bufferIO BufferIO = DefaultBufIO{}
 
 func LoadEnv(envObj interface{}) error {
     envs, err := loadConfDictFromEnv()
@@ -45,12 +47,12 @@ func loadConfDictFromEnvFunc() (map[string]string, error) {
 
 var loadConfDictFromFile = loadConfDictFromFileFunc
 func loadConfDictFromFileFunc(confFile string) (map[string]string, error) {
-	fp, err := FS.Open(confFile)
+	fp, err := fs.Open(confFile)
 	if err != nil {
 		return nil, err
 	}
 	defer fp.Close()
-	fileBuf := BufIO.NewReader(fp)
+	fileBuf := bufferIO.NewReader(fp)
 	confs := make(map[string]string)
     lastLine := false
 	for lineNum := 0; !lastLine; lineNum++ {
