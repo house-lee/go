@@ -7,7 +7,7 @@ import (
 
 type IRequest interface {
 	ID() string
-	SendResponse()
+	Respond(resp interface{})
 	Job() []byte
 	UpdateJob(job []byte)
 }
