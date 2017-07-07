@@ -21,7 +21,7 @@ func main() {
 	for i := 0; i != maxTests; i++ {
 		testArr[i] = false
 	}
-	gq = dsa.NewLockFreeQueue(readerCnt, 0)
+	gq = dsa.NewLockFreeQueue(readerCnt, 0) //This line contains some new explanation
 
 	var wg sync.WaitGroup
 	for i := 0; i != writerCnt; i++ {
