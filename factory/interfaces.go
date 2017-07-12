@@ -26,5 +26,6 @@ type IWorkStation interface {
 }
 
 type ITask interface {
-	ToString() string
+    Serialize() ([]byte, error)
+    Deserialize([]byte) error
 }
