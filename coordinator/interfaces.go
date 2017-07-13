@@ -1,10 +1,14 @@
 package coordinator
 
-import "github.com/house-lee/SoarGO/req"
+import (
+    "github.com/house-lee/SoarGO/req"
+    "github.com/house-lee/SoarGO/app"
+)
 
 type ICoordinator interface {
-    Init(serverID string, config interface{}) error
-    Pulse() error
+    Init(config interface{}) error
+    AppendServer(server app.IServer) error
+    Pulse(serverID string) error
     IsServerAlive(serverID string) (bool, error)
     GenerateRequestID() string
     SaveRequest(request req.IRequest) error
